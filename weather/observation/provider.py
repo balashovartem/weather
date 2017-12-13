@@ -37,11 +37,13 @@ class OpenWeatherMap(Provider):
 
     @classmethod
     def temperature_at_city(cls, city):
+        if not city:
+            raise ValueError("city is empty")
         connection = HTTPConnection('api.openweathermap.org', 80)
         connection.request('GET', f'/data/2.5/find?q={city}&units=metric&APPID={cls.appid}')
         response = connection.getresponse()
         if response.code != 200:
-            pass
+            raise RuntimeError(response.reason)
         timestamp = datetime.strptime(response.headers['date'], '%a, %d %b %Y %H:%M:%S GMT')
         data = response.read()
         json_object = json.loads(data)
@@ -58,11 +60,13 @@ class YandexPogoda(Provider):
 
     @classmethod
     def temperature_at_city(cls, city):
+        if not city:
+            raise ValueError("city is empty")
         connection = HTTPSConnection('yandex.ru', 443)
         connection.request('GET', f'/pogoda/{city}')
         response = connection.getresponse()
         if response.code != 200:
-            pass
+            raise RuntimeError(response.reason)
         timestamp = datetime.strptime(response.headers['date'], '%a, %d %b %Y %H:%M:%S GMT')
         data = response.read()
         tree = html.document_fromstring(data)

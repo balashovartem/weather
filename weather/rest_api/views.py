@@ -19,26 +19,40 @@ class WeatherHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Weather.objects.all()
     serializer_class = WeatherSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
-    ordering_fields = ('location', 'timestamp')
+    ordering_fields = ('city', 'timestamp')
     ordering = ('timestamp',)
-    filter_fields = ('location',)
+    filter_fields = ('city',)
 
     @list_route()
     def last(self, request):
-        self.queryset = Weather.objects.order_by('location', '-timestamp').distinct('location').all()
+        self.queryset = Weather.objects.order_by('city', '-timestamp').distinct('city').all()
         self.filter_backends = (DjangoFilterBackend,)
-        return self.list(request)
+
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        if not len(queryset):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.data)
 
 
 @api_view(['POST'])
 def update_weather(request):
-    json = JSONParser().parse(request.stream)
-    for city in json['cities']:
+    json_request = JSONParser().parse(request.stream)
+    json_error_response = []
+    for city in json_request['cities']:
         for provider in WP.providers():
             try:
                 temperature, timestamp = provider.temperature_at_city(city)
-                print(f'In city {city} temperature {temperature} .'
-                      f' Data source {provider.source()}. Timestamp {timestamp}')
+                Weather.objects.create(city=city, temperature=temperature,
+                                       timestamp=timestamp, source=provider.source())
             except Exception as e:
-                print(e)
-    return Response(status=status.HTTP_400_BAD_REQUEST)
+                json_error_response.append({'source': provider.source(), 'error': str(e)})
+    if len(json_error_response) > 0:
+        return Response(json_error_response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return Response(status=status.HTTP_200_OK)
