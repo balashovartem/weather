@@ -9,5 +9,6 @@ router.register(r'weather_history', views.WeatherHistoryViewSet)
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     url(r'^', include(router.urls)),
+    url(r'update_weather', views.update_weather),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]
