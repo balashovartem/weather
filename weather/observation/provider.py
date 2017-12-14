@@ -3,6 +3,7 @@ from http.client import HTTPConnection, HTTPSConnection
 import json
 from datetime import datetime
 from lxml import html
+import dateparser
 
 
 class Provider:
@@ -44,7 +45,7 @@ class OpenWeatherMap(Provider):
         response = connection.getresponse()
         if response.code != 200:
             raise RuntimeError(response.reason)
-        timestamp = datetime.strptime(response.headers['date'], '%a, %d %b %Y %H:%M:%S GMT')
+        timestamp = dateparser.parse(response.headers['date'])
         data = response.read()
         json_object = json.loads(data)
         return float(json_object['list'][0]['main']['temp']), timestamp
@@ -67,7 +68,7 @@ class YandexPogoda(Provider):
         response = connection.getresponse()
         if response.code != 200:
             raise RuntimeError(response.reason)
-        timestamp = datetime.strptime(response.headers['date'], '%a, %d %b %Y %H:%M:%S GMT')
+        timestamp = dateparser.parse(response.headers['date'])
         data = response.read()
         tree = html.document_fromstring(data)
         span_text = tree.xpath('/html/body/div[3]/div[1]/div[1]/div[2]/div[1]/a/div/span[1]/text()')[0]
