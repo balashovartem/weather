@@ -56,17 +56,18 @@ class WeatherTestCase(TestCase):
 
 
 class ViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+
     def test_weather_history_empty(self):
-        c = Client()
-        response = c.get('/weather_history/')
+        response = self.client.get('/weather_history/')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '[]')
 
     def test_weather_history_not_empty(self):
         weather = Weather.objects.create(city='city', temperature=25.5,
                                          timestamp=datetime.now(pytz.UTC), source='source')
-        c = Client()
-        response = c.get('/weather_history/')
+        response = self.client.get('/weather_history/')
         self.assertEqual(response.status_code, 200)
         json_response = json.loads(response.content)
         self.assertEqual(len(json_response), 1)
@@ -78,15 +79,13 @@ class ViewTestCase(TestCase):
         self.assertEqual(json_response[0]['source'], weather.source)
 
     def test_weather_history_last_empty(self):
-        c = Client()
-        response = c.get('/weather_history/last/')
+        response = self.client.get('/weather_history/last/')
         self.assertEqual(response.status_code, 404)
 
     def test_weather_history_last_not_empty(self):
         weather = Weather.objects.create(city='city', temperature=25.5,
                                          timestamp=datetime.now(pytz.UTC), source='source')
-        c = Client()
-        response = c.get('/weather_history/last/?city=city')
+        response = self.client.get('/weather_history/last/?city=city')
         self.assertEqual(response.status_code, 200)
         json_response = json.loads(response.content)
         self.assertEqual(len(json_response), 1)
@@ -100,18 +99,15 @@ class ViewTestCase(TestCase):
     def test_weather_history_last_not_empty_wrong_city(self):
         Weather.objects.create(city='city', temperature=25.5,
                                timestamp=datetime.now(pytz.UTC), source='source')
-        c = Client()
-        response = c.get('/weather_history/last/?city=city123')
+        response = self.client.get('/weather_history/last/?city=city123')
         self.assertEqual(response.status_code, 404)
 
     def test_update_weather(self):
-        c = Client()
-        response = c.post('/update_weather', data=json.dumps({'cities': ['tomsk']}),
-                          content_type='application/json')
+        response = self.client.post('/update_weather', data=json.dumps({'cities': ['tomsk']}),
+                                    content_type='application/json')
         self.assertEqual(response.status_code, 200)
 
     def test_update_weather_empty_cities(self):
-        c = Client()
-        response = c.post('/update_weather', data=json.dumps({'cities': []}),
-                          content_type='application/json')
+        response = self.client.post('/update_weather', data=json.dumps({'cities': []}),
+                                    content_type='application/json')
         self.assertEqual(response.status_code, 200)
