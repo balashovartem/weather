@@ -4,7 +4,7 @@ python:
 services:
   - postgresql
 before_script:
-  - psql -c 'CREATE USER weather WITH PASSWORD weather;' -U postgres
+  - psql -c 'CREATE USER weather WITH PASSWORD ''weather'';' -U postgres
   - psql -c 'ALTER USER weather CREATEDB;' -U postgres
 install:
 - pip install -r requirements.txt
