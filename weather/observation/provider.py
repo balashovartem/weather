@@ -41,10 +41,11 @@ class OpenWeatherMap(Provider):
         if not city:
             raise ValueError("city is empty")
         connection = HTTPConnection('api.openweathermap.org', 80)
-        connection.request('GET', f'/data/2.5/find?q={city}&units=metric&APPID={cls.appid}')
+        url = f'/data/2.5/find?q={city}&units=metric&APPID={cls.appid}'
+        connection.request('GET', url)
         response = connection.getresponse()
         if response.code != 200:
-            raise RuntimeError(response.reason)
+            raise RuntimeError(f'api.openweathermap.org{url} {response.code} {response.reason}')
         timestamp = dateparser.parse(response.headers['date'])
         data = response.read()
         json_object = json.loads(data)
@@ -64,10 +65,11 @@ class YandexPogoda(Provider):
         if not city:
             raise ValueError("city is empty")
         connection = HTTPSConnection('yandex.ru', 443)
-        connection.request('GET', f'/pogoda/{city}')
+        url = f'/pogoda/{city}'
+        connection.request('GET', url)
         response = connection.getresponse()
         if response.code != 200:
-            raise RuntimeError(response.reason)
+            raise RuntimeError(f'yandex.ru{url} {response.code} {response.reason}')
         timestamp = dateparser.parse(response.headers['date'])
         data = response.read()
         tree = html.document_fromstring(data)
