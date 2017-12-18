@@ -6,6 +6,8 @@ services:
 before_script:
   - psql -c "CREATE USER weather WITH PASSWORD 'weather';" -U postgres
   - psql -c "ALTER USER weather CREATEDB;" -U postgres
+  - psql -c "CREATE DATABASE weather;" -U postgres
+  - psql -c "GRANT ALL PRIVILEGES ON DATABASE weather to weather;" -U postgres
 install:
 - pip install -r requirements.txt
 script:
