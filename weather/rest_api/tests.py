@@ -78,14 +78,14 @@ class ViewTestCase(TestCase):
         self.assertEqual(json_timestamp, weather.timestamp)
         self.assertEqual(json_response[0]['source'], weather.source)
 
-    def test_weather_history_last_empty(self):
-        response = self.client.get('/weather_history/last/')
+    def test_last_weather_history_empty(self):
+        response = self.client.get('/last_weather_history/')
         self.assertEqual(response.status_code, 404)
 
-    def test_weather_history_last_not_empty(self):
+    def test_last_weather_history_not_empty(self):
         weather = Weather.objects.create(city='city', temperature=25.5,
                                          timestamp=datetime.now(pytz.UTC), source='source')
-        response = self.client.get('/weather_history/last/?city=city')
+        response = self.client.get('/last_weather_history/?city=city')
         self.assertEqual(response.status_code, 200)
         json_response = json.loads(response.content)
         self.assertEqual(len(json_response), 1)
@@ -96,10 +96,10 @@ class ViewTestCase(TestCase):
         self.assertEqual(json_timestamp, weather.timestamp)
         self.assertEqual(json_response[0]['source'], weather.source)
 
-    def test_weather_history_last_not_empty_wrong_city(self):
+    def test_last_weather_history_not_empty_wrong_city(self):
         Weather.objects.create(city='city', temperature=25.5,
                                timestamp=datetime.now(pytz.UTC), source='source')
-        response = self.client.get('/weather_history/last/?city=city123')
+        response = self.client.get('/last_weather_history/?city=city123')
         self.assertEqual(response.status_code, 404)
 
     def test_update_weather(self):

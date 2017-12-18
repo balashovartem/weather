@@ -9,7 +9,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser
 
-import weather.observation.provider as WP
+import weather.observation.providers
 
 
 class WeatherHistoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -23,11 +23,19 @@ class WeatherHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ('timestamp',)
     filter_fields = ('city',)
 
-    @list_route()
-    def last(self, request):
-        self.queryset = Weather.objects.order_by('city', '-timestamp').distinct('city').all()
-        self.filter_backends = (DjangoFilterBackend,)
 
+class LastWeatherHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Last weather history resource.
+    """
+    queryset = Weather.objects.order_by('city', '-timestamp').distinct('city').all()
+    serializer_class = WeatherSerializer
+    filter_backends = (DjangoFilterBackend,)
+    ordering_fields = ('city', 'timestamp')
+    ordering = ('timestamp',)
+    filter_fields = ('city',)
+
+    def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
 
         page = self.paginate_queryset(queryset)
@@ -46,7 +54,7 @@ def update_weather(request):
     json_request = JSONParser().parse(request.stream)
     json_error_response = []
     for city in json_request['cities']:
-        for provider in WP.providers():
+        for provider in weather.observation.providers.providers():
             try:
                 temperature, timestamp = provider.temperature_at_city(city)
                 Weather.objects.create(city=city, temperature=temperature,
