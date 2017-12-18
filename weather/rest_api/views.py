@@ -1,8 +1,8 @@
 from rest_framework.filters import OrderingFilter
 from rest_framework import viewsets
-from rest_framework.decorators import list_route, api_view
+from rest_framework.decorators import api_view
 from django_filters.rest_framework import DjangoFilterBackend
-from weather.rest_api.serializers import WeatherSerializer
+from weather.rest_api.serializers import WeatherSerializer, ErrorSerializer
 from weather.rest_api.models import Weather
 
 from rest_framework import status
@@ -60,7 +60,8 @@ def update_weather(request):
                 Weather.objects.create(city=city, temperature=temperature,
                                        timestamp=timestamp, source=provider.source())
             except Exception as e:
-                json_error_response.append({'source': provider.source(), 'error': str(e)})
+                json_error_response.append({'source': provider.source(), 'error': str(e), 'city': city})
     if len(json_error_response) > 0:
-        return Response(json_error_response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        serialized = ErrorSerializer(json_error_response, many=True)
+        return Response(serialized.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return Response(status=status.HTTP_200_OK)
