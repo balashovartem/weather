@@ -2,3 +2,4 @@
 
 # weather
 Тестовое задание improvado.io
+Развернутое приложение - https://protected-harbor-73177.herokuapp.com/
